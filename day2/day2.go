@@ -75,7 +75,7 @@ func levels_differ_safe(arry []int) bool {
 
 	for _, val := range arry {
 		val = AbsInt(val)
-		if val > 3 {
+		if val > 3 || val == 0 {
 			safe = false
 			break
 		}
@@ -83,7 +83,45 @@ func levels_differ_safe(arry []int) bool {
 	}
 	return safe
 }
-func pop_x(i int, xx []int) (int, []int){
+
+func check_removeable(arry []int) bool {
+	count := 0
+	state := true
+	last_num := 0
+	neg_num, pos_num := 0, 0
+
+	last_mix := 0
+	for i, val := range arry {
+		if val < 0 {
+			neg_num++
+		}
+
+		if val > 0 {
+			pos_num++
+		}
+		val = AbsInt(val)
+		if val > 3 || val == 0 {
+			count++
+		} else if last_num*arry[i] < 0 && last_num*arry[i] != last_mix {
+			count++
+			last_mix = last_num * arry[i]
+		}
+
+		last_num = arry[i]
+
+	}
+
+	if neg_num+pos_num == len(arry) && neg_num-pos_num == 0 {
+		state = false
+	}
+
+	if count > 1 {
+		state = false
+	}
+
+	return state
+}
+func pop_x(i int, xx []int) (int, []int) {
 	y := xx[i]
 	new_x := append(xx[:i], xx[i+1:]...)
 	return y, new_x
@@ -150,23 +188,13 @@ func main() {
 			r := int_array[i] - int_array[i+1]
 			tmp_bin = append(tmp_bin, r)
 		}
-		if arrayAllNeg(tmp_bin) || arrayAllPos(tmp_bin) {
-			safe := levels_differ_safe(tmp_bin)
-			if !safe {
-
-				fmt.Println("err")
-
-			} else {
-				//all are either pos or neg
-				//might have a 0 in it
-				checkAbs
-
-				true_bin = append(true_bin, safe)
-			}
+		if (arrayAllNeg(tmp_bin) || arrayAllPos(tmp_bin)) && levels_differ_safe(tmp_bin) {
+			true_bin = append(true_bin, true)
 		} else {
 			// not all same inc/dec
 
-			true_bin = append(true_bin, true)
+			state := check_removeable(tmp_bin)
+			true_bin = append(true_bin, state)
 		}
 	}
 	result2 := countTrue(true_bin)
