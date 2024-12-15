@@ -84,48 +84,21 @@ func levels_differ_safe(arry []int) bool {
 	return safe
 }
 
-func check_removeable(arry []int) bool {
-	count := 0
-	state := true
-	last_num := 0
-	neg_num, pos_num := 0, 0
+func calc_dist_per_n(arry []int) []int {
+	tmp_bin := []int{}
 
-	last_mix := 0
-	for i, val := range arry {
-		if val < 0 {
-			neg_num++
+	for i := 0; i < len(arry); i++ {
+		//diff of each index
+		//
+		if i == len(arry)-1 {
+			break
 		}
-
-		if val > 0 {
-			pos_num++
-		}
-		val = AbsInt(val)
-		if val > 3 || val == 0 {
-			count++
-		} else if last_num*arry[i] < 0 && last_num*arry[i] != last_mix {
-			count++
-			last_mix = last_num * arry[i]
-		}
-
-		last_num = arry[i]
-
+		r := arry[i] - arry[i+1]
+		tmp_bin = append(tmp_bin, r)
 	}
-
-	if neg_num+pos_num == len(arry) && neg_num-pos_num == 0 {
-		state = false
-	}
-
-	if count > 1 {
-		state = false
-	}
-
-	return state
+	return tmp_bin
 }
-func pop_x(i int, xx []int) (int, []int) {
-	y := xx[i]
-	new_x := append(xx[:i], xx[i+1:]...)
-	return y, new_x
-}
+
 func main() {
 	file, err := os.Open("input.txt")
 	if err != nil {
@@ -179,21 +152,39 @@ func main() {
 		int_array := convertToIntArray(line_array)
 		tmp_bin := []int{}
 
-		for i := 0; i < len(int_array); i++ {
-			//diff of each index
-			//
-			if i == len(int_array)-1 {
-				break
-			}
-			r := int_array[i] - int_array[i+1]
-			tmp_bin = append(tmp_bin, r)
-		}
+		// for i := 0; i < len(int_array); i++ {
+		// 	//diff of each index
+		// 	//
+		// 	if i == len(int_array)-1 {
+		// 		break
+		// 	}
+		// 	r := int_array[i] - int_array[i+1]
+		// 	tmp_bin = append(tmp_bin, r)
+		// }
+		tmp_bin = calc_dist_per_n(int_array)
 		if (arrayAllNeg(tmp_bin) || arrayAllPos(tmp_bin)) && levels_differ_safe(tmp_bin) {
 			true_bin = append(true_bin, true)
 		} else {
 			// not all same inc/dec
+			state := false
+			for i := 0; i < len(int_array); i++ {
 
-			state := check_removeable(tmp_bin)
+				new_array := []int{}
+				for ii, val := range int_array {
+					if i == ii {
+						continue
+					}
+					new_array = append(new_array, val)
+				}
+
+				tmp_bin = calc_dist_per_n(new_array)
+				if (arrayAllNeg(tmp_bin) || arrayAllPos(tmp_bin)) && levels_differ_safe(tmp_bin) {
+					state = true
+					break
+				}
+
+			}
+
 			true_bin = append(true_bin, state)
 		}
 	}
